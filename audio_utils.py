@@ -1,4 +1,8 @@
+import os.path
+
+import librosa
 import numpy as np
+import soundfile
 
 
 class AudioUtils:
@@ -20,3 +24,72 @@ class AudioUtils:
         tar_rms = 10 ** (tar_db / 20)
         tar_sig = sig * tar_rms / cur_rms  # the signal is proportional to rms amplitude
         return tar_sig
+
+    @staticmethod
+    def save_to_mono(data, sr, base_dir, name):
+        assert data.ndim == 1 or data.ndim == 2
+
+        if data.ndim == 1:
+            data = data.reshape(1, -1)
+            channel_first = True
+        else:
+            channel_first = data.shape[0] < data.shape[1]
+
+        if channel_first:
+            n_channels = data.shape[0]
+            if n_channels == 1:
+                out_wav_path = os.path.join(base_dir, f'{name}.wav')
+                soundfile.write(out_wav_path, data[0], sr)
+            elif n_channels == 2:
+                l_out_wav_path = os.path.join(base_dir, f'{name}_L.wav')
+                r_out_wav_path = os.path.join(base_dir, f'{name}_R.wav')
+                soundfile.write(l_out_wav_path, data[0], sr)
+                soundfile.write(r_out_wav_path, data[1], sr)
+            else:
+                for i in range(n_channels):
+                    out_wav_path = os.path.join(base_dir, f'{name}_{i}.wav')
+                    soundfile.write(out_wav_path, data[i], sr)
+        else:
+            n_channels = data.shape[1]
+            if n_channels == 1:
+                out_wav_path = os.path.join(base_dir, f'{name}.wav')
+                soundfile.write(out_wav_path, data[:, 0], sr)
+            elif n_channels == 2:
+                l_out_wav_path = os.path.join(base_dir, f'{name}_L.wav')
+                r_out_wav_path = os.path.join(base_dir, f'{name}_R.wav')
+                soundfile.write(l_out_wav_path, data[:, 0], sr)
+                soundfile.write(r_out_wav_path, data[:, 1], sr)
+            else:
+                for i in range(n_channels):
+                    out_wav_path = os.path.join(base_dir, f'{name}_{i}.wav')
+                    soundfile.write(out_wav_path, data[:, i], sr)
+        ...
+
+    @staticmethod
+    def save_to_segment(data, sr, win_len, win_sft, base_dir, name):
+        for i, j in enumerate(range(0, len(data), win_sft)):
+            out_wav_path = os.path.join(base_dir, f'{name}_seg{i}.wav')
+            clip = data[j:j + win_len]
+
+            nsamples = len(clip)
+            if nsamples < win_len:
+                if nsamples < win_len / 2:
+                    break
+                clip = np.pad(clip, (0, win_len - nsamples))
+
+            soundfile.write(out_wav_path, clip, sr)
+
+    @staticmethod
+    def data_generator(in_audio_path, duration, *, sr=None, ret_bytes=False):
+        data, fs = librosa.load(in_audio_path, sr=sr)
+        frame_len = int(fs * duration)
+
+        for i in range(0, len(data), frame_len):
+            clip = data[i: i + frame_len]
+            if len(clip) == frame_len:
+                if ret_bytes:
+                    clip = (clip * 32768).astype(np.short)
+                    yield clip.tobytes()
+                else:
+                    yield clip
+        ...

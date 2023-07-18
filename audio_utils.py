@@ -73,16 +73,17 @@ class AudioUtils:
 
             nsamples = len(clip)
             if nsamples < win_len:
-                if nsamples < win_len / 2:
+                if nsamples < sr:
                     break
-                clip = np.pad(clip, (0, win_len - nsamples))
+                clip = np.pad(clip, (0, win_len - nsamples), mode='wrap')
 
             soundfile.write(out_wav_path, clip, sr)
+            print(out_wav_path)
 
     @staticmethod
-    def data_generator(in_audio_path, duration, *, sr=None, ret_bytes=False):
+    def data_generator(in_audio_path, frame_time, *, sr=None, ret_bytes=False):
         data, fs = librosa.load(in_audio_path, sr=sr)
-        frame_len = int(fs * duration)
+        frame_len = int(fs * frame_time)
 
         for i in range(0, len(data), frame_len):
             clip = data[i: i + frame_len]
@@ -93,3 +94,29 @@ class AudioUtils:
                 else:
                     yield clip
         ...
+
+    @staticmethod
+    def merge_channels(*data_list):
+        n_channels = len(data_list)
+        assert n_channels > 1
+
+        max(l for data in data_list)
+
+    @staticmethod
+    def pcm2wav(pcm_path, wav_path, sample_rate=32000, n_channels=1, sample_width=2):
+        assert not os.path.exists(wav_path)
+
+        with open(pcm_path, 'rb') as fp1, wave.Wave_write(wav_path) as fp2:
+            raw_data = fp1.read()
+            fp2.setsampwidth(sample_width)
+            fp2.setnchannels(n_channels)
+            fp2.setframerate(sample_rate)
+            fp2.writeframes(raw_data)
+
+    @staticmethod
+    def wav2pcm(wav_path, pcm_path):
+        assert not os.path.exists(pcm_path)
+
+        with open(pcm_path, 'wb') as fp1, wave.Wave_read(wav_path) as fp2:
+            raw_data = fp2.readframes()
+            fp1.write(raw_data)

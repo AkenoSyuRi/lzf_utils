@@ -7,7 +7,7 @@ from itertools import chain
 
 class FileUtils:
     @staticmethod
-    def name_and_ext(file_path):
+    def name_ext(file_path):
         basename = os.path.basename(file_path)
         name, ext = os.path.splitext(basename)
         return name, ext[1:]

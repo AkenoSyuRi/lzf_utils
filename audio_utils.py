@@ -1,4 +1,5 @@
 import os.path
+import wave
 
 import librosa
 import numpy as np
@@ -100,7 +101,8 @@ class AudioUtils:
         n_channels = len(data_list)
         assert n_channels > 1
 
-        max(l for data in data_list)
+        # TODO
+        # max(l for data in data_list)
 
     @staticmethod
     def pcm2wav(pcm_path, wav_path, sample_rate=32000, n_channels=1, sample_width=2):
@@ -118,5 +120,6 @@ class AudioUtils:
         assert not os.path.exists(pcm_path)
 
         with open(pcm_path, 'wb') as fp1, wave.Wave_read(wav_path) as fp2:
+            # TODO
             raw_data = fp2.readframes()
             fp1.write(raw_data)

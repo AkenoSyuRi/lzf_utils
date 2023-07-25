@@ -99,10 +99,20 @@ class AudioUtils:
     @staticmethod
     def merge_channels(*data_list):
         n_channels = len(data_list)
+
         assert n_channels > 1
 
-        # TODO
-        # max(l for data in data_list)
+        max_len = 0
+        for i in range(n_channels):
+            assert data_list[i].ndim == 1
+            max_len = max(data_list[i].shape[0], max_len)
+
+        out_data = np.zeros((max_len, n_channels))
+        for i in range(n_channels):
+            data_len = data_list[i].shape[0]
+            out_data[:data_len, i] = data_list[i]
+
+        return out_data
 
     @staticmethod
     def pcm2wav(pcm_path, wav_path, sample_rate=32000, n_channels=1, sample_width=2):

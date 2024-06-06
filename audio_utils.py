@@ -1,9 +1,10 @@
-import os.path
 import wave
+from pathlib import Path
 
 import librosa
 import numpy as np
 import soundfile
+from math_utils import MathUtils
 
 
 class AudioUtils:
@@ -105,7 +106,7 @@ class AudioUtils:
 
     @staticmethod
     def data_generator(in_audio_path, frame_time, *, sr=None, ret_bytes=False):
-        data, _ = librosa.load(in_audio_path, sr=sr)
+        data, sr = librosa.load(in_audio_path, sr=sr)
         frame_len = int(sr * frame_time)
 
         for i in range(0, len(data), frame_len):
@@ -158,7 +159,7 @@ class AudioUtils:
 
     @staticmethod
     def pcm2wav(pcm_path, wav_path, sample_rate=32000, n_channels=1, sample_width=2):
-        assert not os.path.exists(wav_path)
+        # assert not os.path.exists(wav_path)
 
         with open(pcm_path, "rb") as fp1, wave.Wave_write(wav_path) as fp2:
             raw_data = fp1.read()
@@ -175,3 +176,118 @@ class AudioUtils:
         with open(pcm_path, "wb") as fp1, wave.Wave_read(wav_path) as fp2:
             raw_data = fp2.readframes(fp2.getnframes())
             fp1.write(raw_data)
+
+    @staticmethod
+    def cal_rms_db(data, sr, frame_len=0.05, cal_total=False):
+        def get_rms_db(data):
+            rms = np.sqrt(np.mean(np.square(data)))
+            db = 20 * np.log10(rms + 1e-7)
+            return db
+
+        if cal_total:
+            db = get_rms_db(data)
+            return db
+
+        frame_len = int(sr * frame_len)
+        remainder = len(data) % frame_len
+        data = (
+            data[:-remainder].reshape(-1, frame_len)
+            if remainder
+            else data.reshape(-1, frame_len)
+        )
+        db_list = []
+        for i in range(data.shape[0]):
+            frame = data[i]
+            db = get_rms_db(frame)
+            db_list.append(db)
+        db = np.mean(db_list)
+        return db
+
+
+class BufferAdapter:
+    def __init__(self, input_frame_len, output_frame_len):
+        self.input_frame_len = input_frame_len
+        self.output_frame_len = output_frame_len
+
+        self.buf_len = MathUtils.lcm(input_frame_len, output_frame_len)
+        self.buffer = np.zeros(self.buf_len)
+        self.read_index = 0
+        self.write_index = 0
+        self.remain_size = 0
+
+    def write(self, data_frame):
+        assert len(data_frame) == self.input_frame_len
+        self.buffer[
+            self.write_index : self.write_index + self.input_frame_len
+        ] = data_frame
+
+        self.remain_size += self.input_frame_len
+        self.write_index += self.input_frame_len
+
+        if self.write_index >= self.buf_len:
+            self.write_index = 0
+
+    def read(self):
+        assert self.readable(), "you need to check readable before you read"
+        data = self.buffer[self.read_index : self.read_index + self.output_frame_len]
+
+        self.remain_size -= self.output_frame_len
+        self.read_index += self.output_frame_len
+
+        if self.read_index >= self.buf_len:
+            self.read_index = 0
+
+        return data
+
+    def readable(self):
+        return self.remain_size // self.output_frame_len > 0
+
+
+class AudioWriter:
+    def __init__(self, out_wav_dir: Path | str, sr, write_pcm=False):
+        self.out_wav_dir = Path(out_wav_dir)
+        self.sr = sr
+        self.files_map = dict()
+        self.closed = False
+        self.write_pcm = write_pcm
+        self.format = ".pcm" if write_pcm else ".wav"
+
+    def _get_or_open(self, name_without_ext: str):
+        if name_without_ext in self.files_map:
+            fp = self.files_map[name_without_ext]
+        else:
+            out_path = (self.out_wav_dir / name_without_ext).with_suffix(self.format)
+            if self.write_pcm:
+                fp = open(out_path, "wb")
+            else:
+                fp = wave.Wave_write(out_path.as_posix())
+                fp.setsampwidth(2)
+                fp.setnchannels(1)
+                fp.setframerate(self.sr)
+            self.files_map[name_without_ext] = fp
+        return fp
+
+    def write_data_list(self, prefix, data_list, convert2short=True):
+        for i, data in enumerate(data_list):
+            name = f"{prefix}_chn{i:02d}"
+            fp = self._get_or_open(name)
+            write_func = getattr(fp, "write" if self.write_pcm else "writeframes")
+            if convert2short:
+                write_func(self.to_short(data).tobytes())
+            else:
+                write_func(data.tobytes())
+
+    def close(self):
+        for fp in self.files_map.values():
+            fp.close()
+        self.closed = True
+
+    def __del__(self):
+        if not self.closed:
+            self.close()
+
+    @staticmethod
+    def to_short(data):
+        data *= 32768
+        data = np.clip(data, -32768, 32767)
+        return data.astype(np.short)

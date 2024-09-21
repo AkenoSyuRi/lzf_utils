@@ -9,6 +9,7 @@ class Stft:
         self.fft_bins = win_size // 2 + 1
 
         self.window = np.hamming(win_size + 1)[1:]
+        self.window /= self.window.sum()
         self.win_sum = self.get_win_sum_of_1frame(self.window, win_size, hop_size)
 
         self.in_win_data = np.zeros([in_channels, win_size])

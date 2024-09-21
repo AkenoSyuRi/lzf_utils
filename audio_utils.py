@@ -1,6 +1,7 @@
 import os
 import wave
 from pathlib import Path
+from typing import Union
 
 import librosa
 import numpy as np
@@ -244,7 +245,7 @@ class BufferAdapter:
 
 
 class AudioReader:
-    def __init__(self, in_audio_path_or_dir: str | Path, sr=16000):
+    def __init__(self, in_audio_path_or_dir: Union[str, Path], sr=16000):
         self.in_audio_path_or_dir = Path(in_audio_path_or_dir)
         self.sr = sr
 
@@ -299,7 +300,7 @@ class AudioReader:
 
 
 class AudioWriter:
-    def __init__(self, out_wav_dir: str | Path, sr, write_pcm=False):
+    def __init__(self, out_wav_dir: Union[str, Path], sr, write_pcm=False):
         self.out_wav_dir = Path(out_wav_dir)
         self.sr = sr
         self.files_map = dict()

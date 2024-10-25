@@ -2,13 +2,13 @@ import time
 
 
 class TimeUtils:
-    @staticmethod
-    def measure_time(func):
+    @classmethod
+    def measure_time(cls, func):
         def inner(*args, **kwargs):
             t1 = time.time()
             ret = func(*args, **kwargs)
             t2 = time.time()
-            print(f"[elapsed][function:{func.__name__}]: {t2 - t1:.3f}s")
+            print(f"[elapsed][function:{func.__name__}]: {cls.sec2hms(t2 - t1)}")
             return ret
 
         return inner

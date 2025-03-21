@@ -1,5 +1,8 @@
+from typing import Optional, Tuple
+
 import numpy as np
 from matplotlib import pyplot as plt
+from numpy import ndarray
 
 
 class PlotUtils:
@@ -55,8 +58,16 @@ class PlotUtils:
         ...
 
     @classmethod
-    def plot_2d_coord(cls, coords, interval=0.5):
-        assert coords.ndim == 2 and coords.shape[1] == 2
+    def plot_2d_coord(
+        cls,
+        coords: ndarray,
+        interval: float = 0.3,
+        xlim: Optional[Tuple[float, float]] = None,
+        ylim: Optional[Tuple[float, float]] = None,
+    ):
+        assert coords.ndim == 2 and coords.shape[1] in (2, 3)
+        if coords.shape[1] == 3:
+            coords = coords[:, :2]
         x_coords = coords[:, 0]
         y_coords = coords[:, 1]
 
@@ -95,5 +106,11 @@ class PlotUtils:
             plt.pause(interval)
 
         plt.title("2d mic coords")
+
+        if xlim is not None:
+            plt.xlim(xlim)
+        if ylim is not None:
+            plt.ylim(ylim)
+
         plt.show()
         ...

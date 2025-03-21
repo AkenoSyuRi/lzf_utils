@@ -5,6 +5,7 @@ from pathlib import Path
 import librosa
 import numpy as np
 import pyroomacoustics as pra
+
 from audio_utils import AudioWriter
 
 
@@ -76,9 +77,7 @@ class RoomDataSimulator:
         self.center_mic_coord = np.mean(mic_pos, -1)
         self.room = self._create_room()
 
-        print(
-            f"add_reverb={not self.sim_anechoic}, add_noise={self.add_noise}, {rt60=}, {snr=}"
-        )
+        print(f"add_reverb={not self.sim_anechoic}, add_noise={self.add_noise}, {rt60=}, {snr=}")
         ...
 
     def _create_room(self):
@@ -95,9 +94,7 @@ class RoomDataSimulator:
         room.add_microphone_array(pra.MicrophoneArray(self.mic_pos, room.fs))
         return room
 
-    def map2sig_infos(
-        self, in_wav_list, src_pos_list, delay: float = 0, add_delay=None
-    ):
+    def map2sig_infos(self, in_wav_list, src_pos_list, delay: float = 0, add_delay=None):
         """
         construct the inputs for `simulate` function
         :param in_wav_list: source wav file list
@@ -106,9 +103,7 @@ class RoomDataSimulator:
         :param add_delay: accumulate the delay prepare for the next invoking
         :return: sig_info list
         """
-        assert len(in_wav_list) > 0 and len(in_wav_list) == len(
-            src_pos_list
-        ), "invalid inputs"
+        assert len(in_wav_list) > 0 and len(in_wav_list) == len(src_pos_list), "invalid inputs"
 
         if self.acc_delay is None:
             self.acc_delay = delay

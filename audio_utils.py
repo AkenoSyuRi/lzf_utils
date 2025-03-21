@@ -5,14 +5,13 @@ from typing import Union
 
 import librosa
 import numpy as np
+import scipy
 import soundfile
 
 
 class AudioUtils:
     @staticmethod
-    def ffmpeg_convert(
-        in_audio_path, out_audio_path, sr=32000, nchannels=1, overwrite=True
-    ):
+    def ffmpeg_convert(in_audio_path, out_audio_path, sr=32000, nchannels=1, overwrite=True):
         extra_flags = "-y" if overwrite else "-n"
         extra_flags += " -v error"
         cmd = f"ffmpeg -i {in_audio_path} -ar {sr} -ac {nchannels} -acodec pcm_s16le {extra_flags} {out_audio_path}"
@@ -29,9 +28,7 @@ class AudioUtils:
         :param rms_ref: 1.0 for floating point
         :return: the new signal after volume up
         """
-        assert np.issubdtype(
-            sig.dtype, np.floating
-        ), "sig is not of floating-point type"
+        assert np.issubdtype(sig.dtype, np.floating), "sig is not of floating-point type"
 
         cur_rms = np.sqrt(np.mean(sig**2))
         cur_db = 20 * np.log10(cur_rms / rms_ref)
@@ -123,12 +120,16 @@ class AudioUtils:
     @staticmethod
     def wav_data_generator(in_audio_path, frame_time, *, sr=None, ret_bytes=False):
         assert in_audio_path.endswith(".wav"), "support wav format only"
-        frame_len = int(sr * frame_time)
 
         with wave.Wave_read(in_audio_path) as fp:
-            assert fp.getframerate() == sr
+            if sr is None:
+                sr = fp.getframerate()
+            else:
+                assert fp.getframerate() == sr
             assert fp.getnchannels() == 1
             assert fp.getsampwidth() == 2
+
+            frame_len = int(sr * frame_time)
 
             desired_buff_len = frame_len * 2
             buff = fp.readframes(frame_len)
@@ -191,11 +192,7 @@ class AudioUtils:
 
         frame_len = int(sr * frame_len)
         remainder = len(data) % frame_len
-        data = (
-            data[:-remainder].reshape(-1, frame_len)
-            if remainder
-            else data.reshape(-1, frame_len)
-        )
+        data = data[:-remainder].reshape(-1, frame_len) if remainder else data.reshape(-1, frame_len)
         db_list = []
         for i in range(data.shape[0]):
             frame = data[i]
@@ -218,9 +215,7 @@ class BufferAdapter:
 
     def write(self, data_frame):
         assert len(data_frame) == self.input_frame_len
-        self.buffer[
-            self.write_index : self.write_index + self.input_frame_len
-        ] = data_frame
+        self.buffer[self.write_index : self.write_index + self.input_frame_len] = data_frame
 
         self.remain_size += self.input_frame_len
         self.write_index += self.input_frame_len
@@ -250,9 +245,7 @@ class AudioReader:
         self.sr = sr
 
         if self.in_audio_path_or_dir.is_dir():
-            self.in_audio_paths = sorted(
-                self.in_audio_path_or_dir.glob("*.[wp][ac][vm]")
-            )
+            self.in_audio_paths = sorted(self.in_audio_path_or_dir.glob("*.[wp][ac][vm]"))
             assert len(self.in_audio_paths) > 0, "no wav or pcm files found"
         else:
             self.in_audio_paths = [self.in_audio_path_or_dir]
@@ -360,3 +353,22 @@ class AudioWriter:
         data = data * 32768
         np.clip(data, -32768, 32767, out=data)
         return data.astype(np.short)
+
+
+class StreamingConvolution:
+
+    def __init__(self, rir: np.ndarray, L=256):
+        self.rir = rir
+        self.L, self.M = L, len(rir)
+        self.buffer = np.zeros(self.L + self.M - 1)
+
+    def __call__(self, frame: np.ndarray):
+        assert len(frame) == self.L, "frame length should be equal to L"
+        conv_out = scipy.signal.fftconvolve(frame, self.rir)
+
+        output = self.buffer[: self.L] + conv_out[: self.L]
+        self.buffer[self.L :] += conv_out[self.L :]
+        self.buffer[: self.M - 1] = self.buffer[self.L :]
+        self.buffer[self.M - 1 :] = 0
+
+        return output

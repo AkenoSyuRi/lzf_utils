@@ -30,6 +30,7 @@ class TextWriter:
     def write(self, filepath, data, factor=32768):
         if not isinstance(data, np.ndarray):
             data = np.array(data)
+        data = data.reshape(-1)
 
         if factor:
             data = data * factor

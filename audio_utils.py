@@ -1,7 +1,7 @@
 import os
 import wave
 from pathlib import Path
-from typing import Union
+from typing import Optional, Sequence, Union
 
 import librosa
 import numpy as np
@@ -372,3 +372,53 @@ class StreamingConvolution:
         self.buffer[self.M - 1 :] = 0
 
         return output
+
+
+class SignalGenerator:
+    def __init__(
+        self,
+        sample_rate: float,
+        amplitude: float = 0.8,
+    ):
+        self.sample_rate = sample_rate
+        self.amplitude = amplitude
+        self.signals = []
+        ...
+
+    def write_to(self, out_path: str, stereo=False):
+        out_data = np.concatenate(self.signals)
+        if stereo:
+            out_data = np.column_stack([out_data, out_data])
+        soundfile.write(out_path, out_data, self.sample_rate)
+        self.signals.clear()
+        print(f"Wrote {out_path}")
+        ...
+
+    def silence(self, duration: float):
+        silence_signal = np.zeros(int(duration * self.sample_rate))
+        self.signals.append(silence_signal)
+        return self
+
+    def chirp(self, duration: float, start_freq: float, end_freq: Optional[float] = None, linear=False):
+        if end_freq is None:
+            end_freq = self.sample_rate / 2
+
+        sweep_signal = self.amplitude * librosa.chirp(
+            fmin=start_freq, fmax=end_freq, sr=self.sample_rate, duration=duration, linear=linear
+        )
+        self.signals.append(sweep_signal)
+        return self
+
+    def sine_wave(self, duration: float, freqs: Union[float, Sequence[float]], interval=1.0):
+        if isinstance(freqs, float):
+            freqs = [freqs]
+        t = np.arange(0, duration, 1 / self.sample_rate)
+
+        sine_signal = self.amplitude * np.sin(2 * np.pi * freqs[0] * t)
+        self.signals.append(sine_signal)
+
+        for freq in freqs[1:]:
+            self.silence(interval)
+            sine_signal = self.amplitude * np.sin(2 * np.pi * freq * t)
+            self.signals.append(sine_signal)
+        return self

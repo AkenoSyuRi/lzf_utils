@@ -14,6 +14,8 @@ class Stft:
         out_channels: int = 1,
         window: Union[str, np.ndarray] = "hann",
     ):
+        assert fft_size >= win_size, "fft_size must be greater than or equal to win_size"
+
         self.fft_size = fft_size
 
         if win_size is None:

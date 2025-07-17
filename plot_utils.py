@@ -1,5 +1,6 @@
 from typing import Optional, Tuple
 
+import librosa
 import numpy as np
 from matplotlib import pyplot as plt
 from numpy import ndarray
@@ -64,6 +65,7 @@ class PlotUtils:
         interval: float = 0.3,
         xlim: Optional[Tuple[float, float]] = None,
         ylim: Optional[Tuple[float, float]] = None,
+        start_idx: int = 0,
     ):
         assert coords.ndim == 2 and coords.shape[1] in (2, 3)
         if coords.shape[1] == 3:
@@ -95,7 +97,7 @@ class PlotUtils:
             plt.draw()
 
         # 模拟每隔0.5秒更新一次点的位置
-        for i, (x, y) in enumerate(zip(x_coords, y_coords)):
+        for i, (x, y) in enumerate(zip(x_coords, y_coords), start=start_idx):
             plt.title(f"mic {i}")
             if i == 0:
                 update_points(x, y, "red")  # 第一个点是红色
@@ -112,5 +114,26 @@ class PlotUtils:
         if ylim is not None:
             plt.ylim(ylim)
 
+        plt.show()
+        ...
+
+    @staticmethod
+    def plot_spectrogram(
+        waveform: ndarray,
+        sr=16000,
+        fft_size=1024,
+        hop_size=256,
+        win_size=1024,
+        x_axis="time",
+        y_axis="log",
+        title="Spectrogram",
+    ):
+        spec = librosa.stft(waveform, n_fft=fft_size, hop_length=hop_size, win_length=win_size)
+        pow_spec = librosa.amplitude_to_db(np.abs(spec), ref=np.max)
+
+        plt.figure(figsize=(13, 7))
+        librosa.display.specshow(pow_spec, sr=sr, hop_length=hop_size, x_axis=x_axis, y_axis=y_axis)
+        plt.title(title)
+        plt.colorbar(format="%+02.0f dB")
         plt.show()
         ...

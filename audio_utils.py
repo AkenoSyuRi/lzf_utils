@@ -377,7 +377,7 @@ class StreamingConvolution:
 class SignalGenerator:
     def __init__(
         self,
-        sample_rate: float,
+        sample_rate: int,
         amplitude: float = 0.8,
     ):
         self.sample_rate = sample_rate
@@ -397,6 +397,15 @@ class SignalGenerator:
     def silence(self, duration: float):
         silence_signal = np.zeros(int(duration * self.sample_rate))
         self.signals.append(silence_signal)
+        return self
+
+    def pulse(self, duration: float, amplitude: Optional[float] = None):
+        pulse_signal = np.zeros(int(duration * self.sample_rate))
+        if amplitude is None:
+            pulse_signal[0] = self.amplitude
+        else:
+            pulse_signal[0] = amplitude
+        self.signals.append(pulse_signal)
         return self
 
     def chirp(self, duration: float, start_freq: float, end_freq: Optional[float] = None, linear=False):

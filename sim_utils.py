@@ -1,10 +1,12 @@
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Tuple
 
 import librosa
 import numpy as np
 import pyroomacoustics as pra
+from numpy import ndarray
 
 from audio_utils import AudioWriter
 
@@ -27,30 +29,38 @@ def get_audio_signal(audio_path, target_fs, target_db=None):
     return data
 
 
-def cal_source_direction(center_coord, src_pos):
-    x = src_pos[0] - center_coord[0]
-    y = src_pos[1] - center_coord[1]
-    if x == 0 and y == 0:
-        cos_az = 1
-    else:
-        cos_az = x / np.sqrt(x**2 + y**2)
-    azimuth = round(np.rad2deg(np.arccos(cos_az)), 3)
-    if y < 0:
-        azimuth = 360 - azimuth
+def get_azimuth_elevation(array_pos: ndarray, src_pos: ndarray, return_rad=False) -> Tuple[ndarray, ndarray]:
+    """view array_pos as a reference point (origin of the coordinate),
+    note: azi is same when abs(azi) == pi, remember to check this special case
+    :param array_pos: (3,) the center coordinate of the mic array
+    :param src_pos: (3) the coordinate of speakers
+    :param return_rad: return the angle in radius or not(in degree)
+    :param eps: a little no-zero number
+    :return: azi shape (1,) range [-180,180], ele shape (1,) range [-90,90]
+    """
+    delta_d = src_pos - array_pos  # (3,)
 
-    z_diff = abs(src_pos[2] - center_coord[2])
-    dis = np.sqrt(np.sum(np.square(center_coord - src_pos)))
-    cos_el = z_diff / dis
-    elevation = round(np.rad2deg(np.arccos(cos_el)), 1)
+    delta_x = delta_d[0]
+    delta_y = delta_d[1]
+    delta_z = delta_d[2]
 
-    print(f"src_pos: {src_pos}, az/el: {azimuth:.1f}/{elevation:.1f}")
-    return azimuth, elevation
+    azi = np.arctan2(delta_y, delta_x)  # [-pi, pi]
+    ele = np.arctan2(delta_z, np.sqrt(delta_x**2 + delta_y**2))  # [-pi/2, pi/2]
+
+    if return_rad:
+        return azi, ele
+
+    azi = np.round(np.rad2deg(azi)).astype(int)
+    ele = np.round(np.rad2deg(ele)).astype(int)
+
+    print(f"src_pos: {src_pos}, az/el: {azi}/{ele}")
+    return azi, ele
 
 
 @dataclass
 class SigInfo:
     sig: np.ndarray
-    pos: np.ndarray | list
+    pos: np.ndarray
     delay: float = 0
 
 
@@ -114,11 +124,11 @@ class RoomDataSimulator:
                 data = in_wav
             else:
                 data, _ = librosa.load(in_wav, sr=self.fs)
-            cal_source_direction(self.center_mic_coord, src_pos)
+            get_azimuth_elevation(self.center_mic_coord, src_pos)
             sig_infos.append(SigInfo(data, src_pos, delay=self.acc_delay))
 
-        if add_delay:
-            self.acc_delay += add_delay
+            if add_delay:
+                self.acc_delay += add_delay
 
         return sig_infos
 

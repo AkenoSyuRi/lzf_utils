@@ -119,7 +119,8 @@ class PlotUtils:
 
     @staticmethod
     def plot_spectrogram(
-        waveform: ndarray,
+        waveform_or_spec: ndarray,
+        do_stft: bool = True,
         sr=16000,
         fft_size=1024,
         hop_size=256,
@@ -128,11 +129,16 @@ class PlotUtils:
         y_axis="log",
         title="Spectrogram",
     ):
-        spec = librosa.stft(waveform, n_fft=fft_size, hop_length=hop_size, win_length=win_size)
-        pow_spec = librosa.amplitude_to_db(np.abs(spec), ref=np.max)
+        if do_stft:
+            spec = librosa.stft(waveform_or_spec, n_fft=fft_size, hop_length=hop_size, win_length=win_size)
+            pow_spec = librosa.amplitude_to_db(np.abs(spec), ref=np.max)
+        else:
+            pow_spec = waveform_or_spec
 
-        plt.figure(figsize=(13, 7))
+        plt.figure(figsize=(20, 10))
         librosa.display.specshow(pow_spec, sr=sr, hop_length=hop_size, x_axis=x_axis, y_axis=y_axis)
+
+        title = f"{title} (fs={fft_size}, hs={hop_size}, ws={win_size})"
         plt.title(title)
         plt.colorbar(format="%+02.0f dB")
         plt.show()

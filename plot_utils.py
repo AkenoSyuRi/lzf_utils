@@ -131,9 +131,9 @@ class PlotUtils:
     ):
         if do_stft:
             spec = librosa.stft(waveform_or_spec, n_fft=fft_size, hop_length=hop_size, win_length=win_size)
-            pow_spec = librosa.amplitude_to_db(np.abs(spec), ref=np.max)
         else:
-            pow_spec = waveform_or_spec
+            spec = waveform_or_spec
+        pow_spec = librosa.amplitude_to_db(np.abs(spec), ref=np.max)
 
         plt.figure(figsize=(20, 10))
         librosa.display.specshow(pow_spec, sr=sr, hop_length=hop_size, x_axis=x_axis, y_axis=y_axis)

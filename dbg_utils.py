@@ -38,3 +38,7 @@ class TextWriter:
         fp = self.get_file_handle(filepath)
         fp.write(", ".join(data.astype(int).astype(str)) + ", ")
         fp.write("\n")
+
+    def write_line(self, filepath, txt):
+        fp = self.get_file_handle(filepath)
+        fp.write(txt + "\n")

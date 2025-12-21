@@ -2,8 +2,8 @@ from pathlib import Path
 from typing import Tuple, Sequence
 
 import onnx
+import onnxslim
 import torch
-from onnxsim import simplify
 from torch import nn
 
 
@@ -30,9 +30,9 @@ def export_onnx(
     save_sim_path = out_onnx_path.with_suffix(".sim.onnx")
     onnx_model = onnx.load(out_onnx_path)
     onnx.checker.check_model(onnx_model)
-    model_simp, check = simplify(onnx_model)
-    assert check, "Simplified ONNX model could not be validated"
-    onnx.save(model_simp, save_sim_path)
+    model_slimp = onnxslim.slim(onnx_model)
+    onnx.checker.check_model(model_slimp)
+    onnx.save(model_slimp, save_sim_path)
     print(f"Simplified ONNX model saved to {save_sim_path}")
 
     # Convert the ONNX model to float16

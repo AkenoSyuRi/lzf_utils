@@ -8,7 +8,7 @@ import numpy as np
 import pyroomacoustics as pra
 from numpy import ndarray
 
-from .audio_utils import AudioWriter
+from audio_utils import AudioWriter
 
 
 def convert_to_target_db(audio_data, target_db):

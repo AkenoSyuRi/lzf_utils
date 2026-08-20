@@ -1,3 +1,10 @@
+from .detect_speech import (
+    DetectSpeechDebug,
+    detect_speech,
+    periodic_hann,
+    read_wav_mono,
+    spectral_spread_from_magnitude,
+)
 from .io import (
     AudioReader,
     AudioUtils,
@@ -21,6 +28,7 @@ __all__ = [
     "AudioUtils",
     "AudioWriter",
     "BufferAdapter",
+    "DetectSpeechDebug",
     "PlotUtils",
     "RoomDataSimulator",
     "SigInfo",
@@ -28,6 +36,10 @@ __all__ = [
     "Stft",
     "StreamingConvolution",
     "convert_to_target_db",
+    "detect_speech",
     "get_audio_signal",
     "get_azimuth_elevation",
+    "periodic_hann",
+    "read_wav_mono",
+    "spectral_spread_from_magnitude",
 ]

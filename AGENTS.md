@@ -31,6 +31,7 @@ from lzf_utils.audio import AudioWriter, Stft, RoomDataSimulator, PlotUtils
 src/lzf_utils/           # 包根；新领域在这里平行建子包
   audio/
     io.py                # 读写、PCM、增益、帧缓冲、RIR 卷积、测试信号
+    detect_speech.py     # MATLAB detectSpeech 复刻（能量 + spectral spread VAD）
     stft.py              # 有状态逐帧 STFT / iSTFT
     simulate.py          # pyroomacoustics 房间 / 阵列仿真
     plot.py              # 阵列坐标、语谱图

@@ -140,7 +140,14 @@ def _moving_median_shrink(values: NDArray[np.floating], length: int) -> NDArray[
 
     radius = length // 2
     out = np.empty_like(x)
-    for i in range(x.size):
+    # 完整窗口批量求中值，避免每帧调用 Python；两端仍按 shrink 规则计算。
+    if x.size >= length:
+        windows = np.lib.stride_tricks.sliding_window_view(x, length)
+        out[radius:x.size-radius] = np.median(windows, axis=-1)
+        edge_indices = list(range(radius)) + list(range(x.size-radius, x.size))
+    else:
+        edge_indices = range(x.size)
+    for i in edge_indices:
         start = max(0, i - radius)
         stop = min(x.size, i + radius + 1)
         out[i] = np.median(x[start:stop])

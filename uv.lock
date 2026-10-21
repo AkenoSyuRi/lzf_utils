@@ -199,6 +199,15 @@ wheels = [
 ]
 
 [[package]]
+name = "colorama"
+version = "0.4.6"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/d8/53/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6" },
+]
+
+[[package]]
 name = "contourpy"
 version = "1.3.3"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
@@ -363,6 +372,15 @@ wheels = [
 ]
 
 [[package]]
+name = "iniconfig"
+version = "2.3.1"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/01/e1/2069291243c926a2ff1cd706c7f3eeb9b62144bf60f77c9fb9ff2fb26bd3/iniconfig-2.3.1.tar.gz", hash = "sha256:67f4b9c50da0dedf52af349e7749a80a9057a5031199791b906c3bb3ae878960" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/56/43/4ca9e49d27a1fcf6bece6f6aec0ea46bb9112489b93d4b688fb415457bdb/iniconfig-2.3.1-py3-none-any.whl", hash = "sha256:9121e2c1fdb355232495be3194c8dfe87ccc2d5dee45947b78e68f499790d7a7" },
+]
+
+[[package]]
 name = "joblib"
 version = "1.5.3"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
@@ -515,6 +533,11 @@ dependencies = [
     { name = "soundfile" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "librosa", specifier = ">=0.11.0" },
@@ -525,6 +548,9 @@ requires-dist = [
     { name = "scipy-stubs", specifier = ">=1.16.3.3" },
     { name = "soundfile", specifier = ">=0.13.0" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8.0" }]
 
 [[package]]
 name = "matplotlib"
@@ -829,6 +855,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pluggy"
+version = "1.7.0"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/bf/db/7fc19e6f2dc92a966727031389fc2e08b558f0f25eb7403c1119ad4713cd/pluggy-1.7.0.tar.gz", hash = "sha256:d1eaa46ebb595891b860ab086b4d09c8588af65ebd4361b8e8f4bb8920b90ba8" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/40/9e/2b38731e0fc536806f16490e1a12d7f0dc2a1235aa8cc07bcc75416a7daa/pluggy-1.7.0-py3-none-any.whl", hash = "sha256:7dd7b0d8832ba3cb632c306926ded123429211b83641b35dc5c41ad2d34f9bec" },
+]
+
+[[package]]
 name = "pooch"
 version = "1.8.2"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
@@ -861,6 +896,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pygments"
+version = "2.21.0"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/49/2e/ced460408999b33da6b31b0021b0f37d329e202d4169aeb164493778f25b/pygments-2.21.0.tar.gz", hash = "sha256:610ca751c9bc2492b38eb9a38a7fbc93edbbb2d7182edaf34e66ae493dee5c8c" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/71/46/17f022dd3e953bf20a04a028a21ec746d942f8d2af30fa0f124fa0e6a684/pygments-2.21.0-py3-none-any.whl", hash = "sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9" },
+]
+
+[[package]]
 name = "pyparsing"
 version = "3.2.5"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
@@ -887,6 +931,22 @@ wheels = [
     { url = "https://repo.huaweicloud.com/repository/pypi/packages/fd/7d/17559248af9763a4d595836064cd23baf7bb31d1bdbd7c8bc933064ba717/pyroomacoustics-0.9.0-cp313-cp313-win_amd64.whl", hash = "sha256:f31b1c22a43b77e7424f652f8fc045e57c992da6b6f59bcae48f9c352fa74f79" },
     { url = "https://repo.huaweicloud.com/repository/pypi/packages/9e/85/62bf21351d3e10b3c2d81c8a5a15b0c02443d7289e11612e67ed3152ff4c/pyroomacoustics-0.9.0-cp314-cp314-macosx_10_15_universal2.whl", hash = "sha256:59da5376e1fb6dbf6e64f079562b4ec1e1f9a92f8665deaea1ba2b3440cc3790" },
     { url = "https://repo.huaweicloud.com/repository/pypi/packages/ab/26/a5efabdcd4a0b39e9d9fb5cfc1acba6becea81669d04e24300673088bf84/pyroomacoustics-0.9.0-cp314-cp314-win_amd64.whl", hash = "sha256:d88c81c37d132d34641d6378c9aff7388a3664054f94eb80c617d6d51fde0c1b" },
+]
+
+[[package]]
+name = "pytest"
+version = "9.1.1"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "iniconfig" },
+    { name = "packaging" },
+    { name = "pluggy" },
+    { name = "pygments" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/e4/47/b9efed96c114afcfa3c9d3fe98a76a1d14c74a9e266d397cf6eb64be5e01/pytest-9.1.1.tar.gz", hash = "sha256:1088fbde8f2b49d95a549a195707afa7a76a3ce9bcadc26b6d71f0ffda5fe313" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/24/25/1de2678b631f5a49215c6c96fff41ba892b0a34df68d6d80292b1b48aa7f/pytest-9.1.1-py3-none-any.whl", hash = "sha256:37a86b45efb9a47a61a36449063e8e18d0cab3161329fc099eb21783169c4f0c" },
 ]
 
 [[package]]
@@ -1087,8 +1147,8 @@ name = "standard-aifc"
 version = "3.13.0"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
 dependencies = [
-    { name = "audioop-lts" },
-    { name = "standard-chunk" },
+    { name = "audioop-lts", marker = "python_full_version >= '3.13'" },
+    { name = "standard-chunk", marker = "python_full_version >= '3.13'" },
 ]
 sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/c4/53/6050dc3dde1671eb3db592c13b55a8005e5040131f7509cef0215212cb84/standard_aifc-3.13.0.tar.gz", hash = "sha256:64e249c7cb4b3daf2fdba4e95721f811bde8bdfc43ad9f936589b7bb2fae2e43" }
 wheels = [
@@ -1109,7 +1169,7 @@ name = "standard-sunau"
 version = "3.13.0"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
 dependencies = [
-    { name = "audioop-lts" },
+    { name = "audioop-lts", marker = "python_full_version >= '3.13'" },
 ]
 sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/66/e3/ce8d38cb2d70e05ffeddc28bb09bad77cfef979eb0a299c9117f7ed4e6a9/standard_sunau-3.13.0.tar.gz", hash = "sha256:b319a1ac95a09a2378a8442f403c66f4fd4b36616d6df6ae82b8e536ee790908" }
 wheels = [

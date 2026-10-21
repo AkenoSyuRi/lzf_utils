@@ -15,6 +15,12 @@ dependencies = [
 
 [project.scripts]
 detect_speech = "lzf_utils.audio.detect_speech:main"
+rt60 = "lzf_utils.audio.rt60.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
 
 [build-system]
 requires = ["hatchling"]

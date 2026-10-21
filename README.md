@@ -44,6 +44,7 @@ src/lzf_utils/
     simulate.py        # pyroomacoustics 房间 / 阵列仿真
     plot.py            # 阵列坐标、语谱图
     detect_speech.py   # MATLAB detectSpeech 复刻（能量 + spectral spread VAD）
+    rt60/              # RT60 估计、WAV/CLI、诊断绘图
     __init__.py        # 再导出该领域的公开符号
 ```
 
@@ -128,6 +129,92 @@ uv run python -m lzf_utils.audio.detect_speech input.wav --mixdown --plot out.pn
 ```
 
 自动阈值依赖直方图实现，和 MATLAB 可能有小数值差。若要对拍，把 MATLAB 算好的 `thresholds` 传进来即可。
+
+## RT60 估计
+
+`estimate_rt60` 从 RIR 估计 EDT、T20、T30 和最终 RT60。核心流程是 Schroeder 反向积分、Lundeby 噪声截断，以及在 -5..-25 dB / -5..-35 dB 区间内做最小二乘拟合。
+
+```python
+from lzf_utils.audio import estimate_rt60, estimate_rt60_file
+
+result = estimate_rt60(rir, fs=16000, method="auto", bands="octave")
+channel = result.channels[0]
+print(channel.rt60, channel.method_used, channel.valid, channel.reason)
+print(channel.edt, channel.t20, channel.t30)
+print(result.stats.median, result.stats.mean, result.stats.std)
+
+result = estimate_rt60_file("room_rir.wav")
+```
+
+诊断图也可以直接从 API 生成：
+
+```python
+from lzf_utils.audio import plot_rt60
+
+plot_rt60(result, channel=0, output_path="rt60_diagnostics.png")
+```
+
+- `rir`：`(N,)` 或 `(N, C)`，默认时间轴为 0，可用 `time_axis` 指定。多通道逐通道独立处理，不会先平均波形。
+- `method`：`auto` / `EDT` / `T20` / `T30`。`auto` 优先使用可信的 T30，其次 T20；不会用 EDT 顶替。
+- `bands`：`None` 关闭分频带；`"octave"` 使用 125、250、500、1000、2000、4000 Hz；也可传自定义中心频率序列。超过 Nyquist 的频带会被跳过。
+- `detect_onset`：默认开启直达声起点检测；关闭后从第 0 个样本开始积分。
+- `min_r2`：拟合优度阈值，默认 0.95。
+- `min_noise_margin_db`：拟合终点与噪声底的最小余量，默认 10 dB。
+- `max_method_disagreement`：`auto` 回退到 T20 时允许的 T20/T30 相对差异，默认 0.25；超过时判为无效。
+
+每个通道的结果包含 `edt`、`t20`、`t30`、`rt60`、`method_used`、`r2`、`valid`、`reason`、`decay_range_db`、`onset_sample/time_s`，以及：
+
+- `methods`：每种方法的拟合区间、斜率、R²、噪声污染和噪声余量；
+- `noise`：噪声功率、峰值信噪比、EDC 噪声底、截断位置、迭代次数；
+- `edc_time_s` / `edc_db`：用于绘图和调试的 EDC 数据。
+
+无效结果使用 `rt60=NaN`、`valid=False`，并在 `reason` 中给出原因；导出 JSON 时非有限值写成 `null`。各方法自己的诊断数值仍会保留，便于分析为什么不可信。
+
+### 噪声处理
+
+1. 用 RIR 尾部 10% 估计初始噪声功率；
+2. 对平方 RIR 分块平均，在“噪声 + 10 dB”到“噪声 + 30 dB”的衰减段拟合直线；
+3. 求直线与噪声底的交点，并按衰减速度自适应选择块长，迭代更新噪声和交点；
+4. 在交点处截断 Schroeder 积分。
+
+这里只做截断，不做尾部能量补偿：单指数尾部的补偿项对 EDC 是常数，不改变斜率；拟合区间又要求在截断点上方保留 10 dB 余量。这样比无条件补偿更不容易在低信噪比时制造虚假的衰减。若噪声底无法可靠估计，或截断点太早，结果直接判无效，不会退化成完整含噪 RIR 的强制拟合。
+
+宽带处理只做常量峰值归一化，不做 AGC、动态范围压缩或随时间的增益处理；分频带只使用零相位 SOS 带通滤波。
+
+### 命令行
+
+```bash
+uv run rt60 room_rir.wav
+uv run rt60 room_rir.wav --method T20 --bands octave --plot --output result.json
+uv run python -m lzf_utils.audio.rt60 room_rir.wav
+```
+
+`--plot` 默认把诊断图写到输入文件同目录的 `<stem>_rt60.png`。`--bands octave` 会额外输出各频带结果；`--channel` 控制绘图使用哪个通道。
+
+需要把 EDC 也写进 JSON 时，用 `result.to_json("result.json", include_edc=True)`。
+
+### 验证
+
+在本机 100 个仿真 RIR（5 声源 × 16 麦克风，共 8000 通道）上，以仿真标注的 Sabine RT60 为参考：
+
+| 项目 | 有效数 | 中位误差 | 平均绝对误差 | 90% 绝对误差 |
+|---|---:|---:|---:|---:|
+| T30 | 7714/8000 | +0.38% | 5.60% | 13.05% |
+| auto 最终值 | 7953/8000 | +0.61% | 5.97% | 14.23% |
+| T20 | 7682/8000 | -0.31% | 8.22% | 17.99% |
+
+EDT 的偏差更大（中位约 -13%），且大量近场通道的 EDT 拟合 R² 不足；这是因为强直达声主导了 0 到 -10 dB 的早期 EDC。近场/远场声源的 T30 平均绝对误差分别在 4.6% 到 6.6% 之间。与 `pyroomacoustics.experimental.measure_rt60` 在 1583 个有效通道上交叉验证，相关系数约 0.98；后者用两个阈值交点外推且不处理噪声/起点，中位误差约 -8.3%，说明分段最小二乘拟合更适合这里的仿真 RIR。
+
+### 可信度与限制
+
+- T30 至少要能从 -5 dB 拟合到 -35 dB，并且拟合终点比噪声底高 `min_noise_margin_db`。不满足时 `auto` 会尝试 T20；T20 也不满足则判无效。回退到 T20 时还会检查 T20 与 T30 的差异，超过 `max_method_disagreement` 的结果会被判无效。
+- 结果同时检查衰减范围、斜率方向、R² 和噪声余量，不会只看 R²。
+- 近场/强直达声可能让 EDT 很短，也会让 T30 偏离房间的 Sabine RT60；这是 RIR 位置相关的正常现象，建议用多个传声器位置统计。
+- 频带能量过低、频带长度不足或噪声底不可靠时，对应频带会被标记无效。
+- 非指数衰减（耦合房间、频率相关吸收、非平稳噪声）不满足单斜率模型，T20/T30 差异大或 R² 低时应谨慎。
+- 输入应是去除明显 DC 偏置的 RIR；本工具不做额外的宽带高通或去趋势处理。语音、音乐等非 RIR 信号即使返回数值也没有物理意义。
+- 明显削波的 RIR 会破坏指数衰减假设；工具会通过衰减范围、R² 和噪声检查尽量识别，但不专门做削波检测。
+- 本工具是 RIR 后处理工具，不替代 ISO 3382 的测量规范；多通道统计只在逐通道估计完成后进行。
 
 ## 依赖
 

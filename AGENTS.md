@@ -35,6 +35,7 @@ src/lzf_utils/           # 包根；新领域在这里平行建子包
     stft.py              # 有状态逐帧 STFT / iSTFT
     simulate.py          # pyroomacoustics 房间 / 阵列仿真
     plot.py              # 阵列坐标、语谱图
+    rt60/                # RT60 估计、WAV/CLI、诊断绘图
     __init__.py          # 再导出该领域的公开符号
 ```
 

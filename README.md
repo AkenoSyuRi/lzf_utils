@@ -44,6 +44,7 @@ src/lzf_utils/
     simulate.py        # pyroomacoustics 房间 / 阵列仿真
     plot.py            # 阵列坐标、语谱图
     detect_speech.py   # MATLAB detectSpeech 复刻（能量 + spectral spread VAD）
+    scan_dbfs.py       # 多通道录音的均方 dBFS 上下界扫描（CLI）
     rt60/              # RT60 估计、WAV/CLI、诊断绘图
     __init__.py        # 再导出该领域的公开符号
 ```
@@ -129,6 +130,32 @@ uv run python -m lzf_utils.audio.detect_speech input.wav --mixdown --plot out.pn
 ```
 
 自动阈值依赖直方图实现，和 MATLAB 可能有小数值差。若要对拍，把 MATLAB 算好的 `thresholds` 传进来即可。
+
+## 多通道 dBFS 扫描
+
+`scan_dbfs_file` 统一重采样到 16 kHz，按窗计算指定通道组的均方 dBFS。MIC 组用 REF 静默段估计底噪并加余量设门限，REF 组会排除静音窗和只在窗头/窗尾短暂有活动的起停窗。
+
+```python
+from lzf_utils.audio import scan_dbfs_file
+
+mic_bounds, ref_bounds = scan_dbfs_file(
+    "capture.wav",
+    mic_indices=[5, 6, 7, 8],
+    ref_indices=[9],
+    window_sec=4.0,
+)
+print(mic_bounds.low, mic_bounds.high)          # dBFS
+print(mic_bounds.low_window.start_sample)       # 最低窗在原文件中的起点
+```
+
+命令行可以一次扫描多个文件或整个目录：
+
+```bash
+uv run scan_dbfs --mic-indices 5,6,7,8 --ref-indices 9 /path/to/dir /path/to/file.wav
+uv run python -m lzf_utils.audio.scan_dbfs --mic-indices 5,6,7,8 --ref-indices 9 input.wav
+```
+
+默认 4 秒窗、1 秒步长；谱通量筛选默认开启，会筛掉 REF 静默窗中活动不足窗长一半的 MIC 窗，可用 `--no-mic-spectral-vad` 关闭。
 
 ## RT60 估计
 

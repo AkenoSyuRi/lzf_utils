@@ -32,6 +32,7 @@ src/lzf_utils/           # 包根；新领域在这里平行建子包
   audio/
     io.py                # 读写、PCM、增益、帧缓冲、RIR 卷积、测试信号
     detect_speech.py     # MATLAB detectSpeech 复刻（能量 + spectral spread VAD）
+    scan_dbfs.py         # 多通道录音的均方 dBFS 上下界扫描（CLI）
     stft.py              # 有状态逐帧 STFT / iSTFT
     simulate.py          # pyroomacoustics 房间 / 阵列仿真
     plot.py              # 阵列坐标、语谱图
@@ -64,7 +65,7 @@ uv lock
 
 ## 依赖
 
-当前直接依赖：`librosa`、`matplotlib`、`numpy`、`pyroomacoustics`、`scipy`、`scipy-stubs`、`soundfile`。
+当前直接依赖：`librosa`、`matplotlib`、`numpy`、`pyroomacoustics`、`scipy`、`scipy-stubs`、`soundfile`、`soxr`。
 
 - 新依赖必须先被代码直接 import，再写入 `pyproject.toml`。
 - 不要把 `torch` / ONNX 加回默认依赖。若以后需要导出模型，做成 optional extra。

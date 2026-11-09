@@ -11,11 +11,13 @@ dependencies = [
     "scipy>=1.16.0",
     "scipy-stubs>=1.16.3.3",
     "soundfile>=0.13.0",
+    "soxr>=1.0.0",
 ]
 
 [project.scripts]
 detect_speech = "lzf_utils.audio.detect_speech:main"
 rt60 = "lzf_utils.audio.rt60.cli:main"
+scan_dbfs = "lzf_utils.audio.scan_dbfs:main"
 
 [dependency-groups]
 dev = [

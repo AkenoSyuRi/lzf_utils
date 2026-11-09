@@ -27,6 +27,7 @@ from .rt60 import (
     estimate_rt60_file,
     plot_rt60,
 )
+from .scan_dbfs import Bounds, WindowLocation, scan_dbfs_file
 from .simulate import (
     RoomDataSimulator,
     SigInfo,
@@ -41,6 +42,7 @@ __all__ = [
     "AudioUtils",
     "AudioWriter",
     "BandRT60Result",
+    "Bounds",
     "BufferAdapter",
     "ChannelRT60Result",
     "ChannelStats",
@@ -56,6 +58,7 @@ __all__ = [
     "SignalGenerator",
     "Stft",
     "StreamingConvolution",
+    "WindowLocation",
     "convert_to_target_db",
     "detect_speech",
     "estimate_rt60",
@@ -65,5 +68,6 @@ __all__ = [
     "periodic_hann",
     "plot_rt60",
     "read_wav_mono",
+    "scan_dbfs_file",
     "spectral_spread_from_magnitude",
 ]
